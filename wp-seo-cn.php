@@ -1,10 +1,10 @@
-<?
+﻿<?
 /*
 Plugin Name: WordPress中文SEO插件
 Plugin URI:  http://fairyfish.net/2008/06/27/wordpress-seo-plugin-for-chine/
 Description: 根据博客内容获得中文关键词!
 Author: askie
-Version: 0.1
+Version: 0.2
 Author URI: http://www.pkphp.com/
 
 Licence:
