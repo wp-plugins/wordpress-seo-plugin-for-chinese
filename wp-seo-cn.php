@@ -215,22 +215,28 @@ function ck_getchinesekeys($post)
 //获取关键词
 function ck_getckeys($pid)
 {
-	$apost = get_post($pid);
-	$data["charset"]=get_option("blog_charset");
-	$data["blogname"]=get_option("blogname");
-	$data["blogurl"]=get_option("siteurl");
-	$data["blogdescription"]=get_option("blogdescription");
-	$data["title"]	=$apost->post_title;
-	$data["body"]	=$apost->post_content;
-	$data["n"]		=get_option("ck_n");
-	$data["permlink"]=get_permalink($pid);
-	$data["tags"]	=implode("#|#",array_unique(ck_getSysTags()));
-	$data["cats"]	=implode("#|#",array_unique(ck_getCats()));
-	$data["metas"]	=implode("#|#",array_unique(ck_getMetas()));
-	$data["intags"]	=implode("#|#",ck_getPostTags($pid));
-	
-	$chineseKeywords=ck_virtualPost("http://www.iaska.cn/cnkeys.php",$data);
-	return $chineseKeywords;
+	if ($pid>0) 
+	{
+		global $user_identity;
+		$apost = get_post($pid);
+		$data["charset"]=get_option("blog_charset");
+		$data["blogauthor"]=$user_identity;
+		$data["postid"]	=$pid;
+		$data["blogname"]=get_option("blogname");
+		$data["blogurl"]=get_option("siteurl");
+		$data["blogdescription"]=get_option("blogdescription");
+		$data["title"]	=$apost->post_title;
+		$data["body"]	=$apost->post_content;
+		$data["n"]		=get_option("ck_n");
+		$data["permlink"]=get_permalink($pid);
+		$data["tags"]	=implode("#|#",array_unique(ck_getSysTags()));
+		$data["cats"]	=implode("#|#",array_unique(ck_getCats()));
+		$data["metas"]	=implode("#|#",array_unique(ck_getMetas()));
+		$data["intags"]	=implode("#|#",ck_getPostTags($pid));
+		
+		$chineseKeywords=ck_virtualPost("http://www.iaska.cn/cnkeys.php",$data);
+		return $chineseKeywords;
+	}
 }
 //获取本地tags
 function ck_ajax_getLocalTags()
