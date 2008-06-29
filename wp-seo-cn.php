@@ -4,7 +4,7 @@ Plugin Name: WordPress中文SEO插件
 Plugin URI:  http://fairyfish.net/2008/06/27/wordpress-seo-plugin-for-chine/
 Description: 根据博客内容获得中文关键词!
 Author: askie
-Version: Beta 0.1
+Version: 0.1
 Author URI: http://www.pkphp.com/
 
 Licence:
@@ -13,7 +13,7 @@ All right reserved to Askie!
 USAGE:
 Just enabled plugin!
 */
-$ck_version="Beta 0.1";
+$ck_version="0.1";
 
 //一般设定
 function ck_generalsetting()
@@ -179,14 +179,18 @@ function ck_addCKaftercontent($content)
 //根据内容分词
 function ck_getchinesekeys($post)
 {
-	global $id,$wpdb;
-	//保存中文分词
-	$chineseKeywords=ck_getckeys($id);
-	$oldchineseKeywords = get_post_meta($id, "chinesekeys", true);
-	if ($oldchineseKeywords=="") 
+	//保存中文分词到数据库
+	if ($post) 
 	{
-		add_post_meta($id, 'chinesekeys', $chineseKeywords);
+		$chineseKeywords=ck_getckeys($post);
+		$oldchineseKeywords = get_post_meta($post, "chinesekeys", true);
+		if ($oldchineseKeywords=="") 
+		{
+			add_post_meta($post, 'chinesekeys', $chineseKeywords);
+		}
 	}
+	
+	global $wpdb;
 	//自动填充摘要
 	if (get_option("ck_autoexcerpt")==1) 
 	{
@@ -908,6 +912,7 @@ function ck_remplaceTagsHelper()
 	if ( (typeof tinyMCE != "undefined") && tinyMCE.activeEditor && !tinyMCE.activeEditor.isHidden() ) { // Tiny MCE
 		tinyMCE.triggerSave();
 		data = document.getElementById("content").innerHTML;
+		if ( data == "" ) data = jQuery("#content").val();
 	} else if ( typeof FCKeditorAPI != "undefined" ) { // FCK Editor
 		var oEditor = FCKeditorAPI.GetInstance('content') ;
 		data = oEditor.GetHTML().stripTags();
@@ -915,6 +920,7 @@ function ck_remplaceTagsHelper()
 		data = WYM_INSTANCES[0].xhtml().stripTags();
 	} else { // No editor, just quick tags
 		data = document.getElementById("content").innerHTML;
+		if ( data == "" ) data = jQuery("#content").val();
 	}
 	return data;
 }

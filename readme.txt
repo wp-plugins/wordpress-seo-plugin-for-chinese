@@ -3,7 +3,7 @@ Contributors: denishua,askie
 Tags: Bookmark,Share
 Requires at least: 2.3
 Tested up to: 2.51
-Stable tag: Beta 0.1
+Stable tag: 0.1
 
 WordPress SEO Plugin for Chinese use Chinese Word Splitter to SEO Chinese SEO Blog. 
 
