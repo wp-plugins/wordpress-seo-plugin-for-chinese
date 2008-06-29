@@ -1,6 +1,6 @@
 === Plugin Name ===
 Contributors: denishua,askie
-Tags: Bookmark,Share
+Tags: SEO, Chinese, Tag
 Requires at least: 2.3
 Tested up to: 2.51
 Stable tag: 0.1
