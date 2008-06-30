@@ -1,4 +1,4 @@
-﻿<?
+<?
 /*
 Plugin Name: WordPress中文SEO插件
 Plugin URI:  http://fairyfish.net/2008/06/27/wordpress-seo-plugin-for-chine/
