@@ -1024,8 +1024,6 @@ add_action('publish_post', 'ck_saveTags');
 //输出meta
 add_filter('wp_head', 'ck_head');
 //获取关键词
-add_action('edit_post', 	'ck_getchinesekeys');
-add_action('edit_page', 	'ck_getchinesekeys');
 add_action('publish_post', 	'ck_getchinesekeys');
 add_action('publish_page', 	'ck_getchinesekeys');
 //加入菜单
