@@ -4,16 +4,32 @@ Plugin Name: WordPress中文SEO插件
 Plugin URI:  http://fairyfish.net/2008/06/27/wordpress-seo-plugin-for-chine/
 Description: 根据博客内容获得中文关键词并提供中文关键词建议，进行博客SEO!
 Author: askie
-Version: 0.3
+Version: 0.4
 Author URI: http://www.pkphp.com/
 
-Licence:
-All right reserved to Askie!
+Copyright (c) 2007
+Released under the GPL license
+http://www.gnu.org/licenses/gpl.txt
 
-USAGE:
-Just enabled plugin!
+    This file is part of WordPress.
+    WordPress is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+	INSTALL: 
+	Just install the plugin in your blog and activate
 */
-$ck_version="0.1";
+$ck_version="0.4";
 
 //一般设定
 function ck_generalsetting()
@@ -67,12 +83,46 @@ function ck_generalsetting()
            		  <input type="text" name="ck_n" value="<?=$ck_n?>" size="4">个(最少15个词，最多40个词) 
 				 </td>
 			</tr>
+			
+			<tr><td colspan="2" width="100%" bgcolor="Black"></td></tr>
+			<tr>
+           		<td nowrap>在文章显示相关文章？</td>
+           		<td>
+           		  <input type="radio" name="ck_addrelatedposts" value="0" <?=get_option('ck_addrelatedposts')==0?" checked=\"checked\"":""?>>No 
+				  <input type="radio" name="ck_addrelatedposts" value="1" <?=get_option('ck_addrelatedposts')==1?" checked=\"checked\"":""?>>Yes
+				 </td>
+			</tr>
+			<tr>
+           		<td nowrap>相关文章数量？</td>
+           		<td>
+           		  <input type="text" name="ck_relatedpostsn" value="<?=get_option('ck_relatedpostsn')==""?"10":get_option('ck_relatedpostsn')?>"> 
+				 </td>
+			</tr>
+			<tr>
+           		<td nowrap>相关文章前缀？</td>
+           		<td>
+           		  <input type="text" name="ck_relatedpostsbefore" value="<?=get_option('ck_relatedpostsbefore')==""?"相关文章：":get_option('ck_relatedpostsbefore')?>"> 
+				 </td>
+			</tr>
+			
 			<tr><td colspan="2" width="100%" bgcolor="Black"></td></tr>
 			<tr>
            		<td nowrap>在文章后键入关键词么？</td>
            		<td>
            		  <input type="radio" name="ck_addckaftercontent" value="0" <?=get_option('ck_addckaftercontent')==0?" checked=\"checked\"":""?>>No 
 				  <input type="radio" name="ck_addckaftercontent" value="1" <?=get_option('ck_addckaftercontent')==1?" checked=\"checked\"":""?>>Yes
+				 </td>
+			</tr>
+			<tr>
+           		<td nowrap>关键词前缀？</td>
+           		<td>
+           		  <input type="text" name="ck_keysbefore" value="<?=get_option('ck_keysbefore')==""?"中文关键字：":get_option('ck_keysbefore')?>"> 
+				 </td>
+			</tr>
+			<tr>
+           		<td nowrap>关键词颜色？</td>
+           		<td>
+           		  <input type="text" name="ck_keyscolor" value="<?=get_option('ck_keyscolor')==""?"#0000ff":get_option('ck_keyscolor')?>"> 
 				 </td>
 			</tr>
 			<tr><td colspan="2" width="100%" bgcolor="Black"></td></tr>
@@ -158,12 +208,11 @@ function ck_utf8_subString( $string,$length = 80,$etc='...',$count_words = true 
  }
  return join("",array_slice( $info[0],0,$length ) ).$etc;
 }
-//根据文章内容分词
-function ck_addCKaftercontent($content)
+//根据id获取中文关键
+function ck_getPostMetaCkeys($id)
 {
-	global $id;
 	$oldchineseKeywords = get_post_meta($id, "chinesekeys", true);
-	if ($oldchineseKeywords=="") 
+	if ($oldchineseKeywords=="" and $id>0) 
 	{
 		$chineseKeywords=ck_getckeys($id);
 		add_post_meta($id, 'chinesekeys', $chineseKeywords);
@@ -173,14 +222,69 @@ function ck_addCKaftercontent($content)
 		$chineseKeywords=$oldchineseKeywords;
 	}
 	
-	$content.="<br>中文关键字：<font color='blue'>".$chineseKeywords."</font><br>";
+	return $chineseKeywords;
+}
+//根据文章内容分词
+function ck_addCKaftercontent($content)
+{
+	global $id;
+	
+	if (get_option("ck_addrelatedposts")==1)
+	{
+		$content.="<b>".get_option("ck_relatedpostsbefore")."</b><br>\r\n".ck_getRelatedPost();
+	}
+	
+	if (get_option("ck_addckaftercontent")==1)
+	{
+		$chineseKeywords=ck_getPostMetaCkeys($id);
+		$a=get_option('ck_keysbefore')==""?"中文关键字：":get_option('ck_keysbefore');
+		$c=get_option('ck_keyscolor')==""?"#0000ff":get_option('ck_keyscolor');
+		$content.="<br>{$a}<font color='{$c}'>".$chineseKeywords."</font><br>";
+	}
+	
 	return $content;
+}
+//根据文章内容分词
+function ck_getRelatedPost()
+{
+	global $id, $wpdb, $post,$table_prefix;
+	
+	$ckeys = explode(" ",ck_getPostMetaCkeys($id));
+	$now = current_time('mysql', 1);
+	foreach ($ckeys as $key) 
+	{
+		$q = "SELECT DISTINCT p.ID, p.post_title, p.post_date FROM $wpdb->posts p WHERE (p.post_title LIKE '%{$key}%' OR p.post_title LIKE '%{$key}%') AND p.ID != {$id} AND p.post_status = 'publish' AND p.post_date_gmt < '$now' ORDER BY p.post_date_gmt DESC LIMIT 0 , 10;";
+		$related_posts[]= $wpdb->get_results($q);
+	}
+	foreach ((array)$related_posts as $a) 
+	{
+		foreach ((array)$a as $b) 
+		{
+			$x[$b->ID]++;
+			$y[$b->ID]=$b;
+		}
+	}
+	arsort($x);
+	foreach ($x as $k=>$v) 
+	{
+		$x[$k]=$y[$k];
+	}
+	//截取需要显示的数量
+	$n=(int)get_option('ck_relatedpostsn');
+	$n=$n<1?10:$n;
+	$z=array_slice($x,0,$n);
+	foreach ($z as $p) 
+	{
+		$ww[]='<li><a href="'.get_permalink($p->ID).'" title="'.wptexturize($p->post_title).'">'.wptexturize($p->post_title).'</a></li>';
+	}
+	$t="<ul>".implode("\r\n",(array)$ww)."</ul>";
+	return $t;
 }
 //根据内容分词
 function ck_getchinesekeys($post)
 {
 	//保存中文分词到数据库
-	if ($post) 
+	if ($post>0) 
 	{
 		$chineseKeywords=ck_getckeys($post);
 		$oldchineseKeywords = get_post_meta($post, "chinesekeys", true);
@@ -389,9 +493,9 @@ function ck_head()
 	
 	if ($meta_string != null) 
 	{
-		echo "<!-- Start of meta info created by chinesekeywordsSEO{$ck_version} Plugin by http://www.pkphp.com/ -->\n";
+		echo "<!-- Start of meta info created by chinesekeywordsSEO {$ck_version} Plugin by http://www.pkphp.com/ -->\n";
 		echo "$meta_string\n";
-		echo "<!-- End of meta info created by chinesekeywordsSEO{$ck_version} Plugin by http://www.pkphp.com/ -->\n\n";
+		echo "<!-- End of meta info created by chinesekeywordsSEO {$ck_version} Plugin by http://www.pkphp.com/ -->\n\n";
 	}	
 }
 function ck_getMetas() 
@@ -1011,7 +1115,7 @@ function ck_admin_menu()
 	}
 }
 //内容之后加入中文关键字
-if (get_option("ck_addckaftercontent")==1) 
+if (get_option("ck_addckaftercontent")==1 or get_option("ck_addrelatedposts")==1) 
 {
 	add_filter('the_content',"ck_addCKaftercontent");
 }
