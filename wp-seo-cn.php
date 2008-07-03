@@ -209,13 +209,13 @@ function ck_utf8_subString( $string,$length = 80,$etc='...',$count_words = true 
  return join("",array_slice( $info[0],0,$length ) ).$etc;
 }
 //根据id获取中文关键
-function ck_getPostMetaCkeys($id)
+function ck_getPostMetaCkeys($pid)
 {
-	$oldchineseKeywords = get_post_meta($id, "chinesekeys", true);
-	if ($oldchineseKeywords=="" and $id>0) 
+	$oldchineseKeywords = get_post_meta($pid, "chinesekeys", true);
+	if ($oldchineseKeywords=="") 
 	{
-		$chineseKeywords=ck_getckeys($id);
-		add_post_meta($id, 'chinesekeys', $chineseKeywords);
+		$chineseKeywords=ck_getckeys($pid);
+		add_post_meta($pid, 'chinesekeys', $chineseKeywords);
 	}
 	else 
 	{
@@ -284,14 +284,9 @@ function ck_getRelatedPost()
 function ck_getchinesekeys($post)
 {
 	//保存中文分词到数据库
-	if ($post>0) 
+	if ($post) 
 	{
-		$chineseKeywords=ck_getckeys($post);
-		$oldchineseKeywords = get_post_meta($post, "chinesekeys", true);
-		if ($oldchineseKeywords=="") 
-		{
-			add_post_meta($post, 'chinesekeys', $chineseKeywords);
-		}
+		ck_getPostMetaCkeys($post->ID);
 	}
 	
 	global $wpdb;
