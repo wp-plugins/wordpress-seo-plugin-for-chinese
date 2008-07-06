@@ -323,7 +323,7 @@ function ck_getckeys($pid)
 		$apost = get_post($pid);
 		$data["charset"]=get_option("blog_charset");
 		$data["blogauthor"]=$user_identity;
-		$data["postid"]	=$pid;
+		$data["postid"]	=$apost->post_parent>0?$apost->post_parent:$pid;
 		$data["blogname"]=get_option("blogname");
 		$data["blogurl"]=get_option("siteurl");
 		$data["blogdescription"]=get_option("blogdescription");
