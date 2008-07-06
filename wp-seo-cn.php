@@ -4,7 +4,7 @@ Plugin Name: WordPress中文SEO插件
 Plugin URI:  http://fairyfish.net/2008/06/27/wordpress-seo-plugin-for-chine/
 Description: 根据博客内容获得中文关键词并提供中文关键词建议，进行博客SEO!
 Author: askie
-Version: 0.4
+Version: 0.5
 Author URI: http://www.pkphp.com/
 
 Copyright (c) 2007
@@ -29,7 +29,7 @@ http://www.gnu.org/licenses/gpl.txt
 	INSTALL: 
 	Just install the plugin in your blog and activate
 */
-$ck_version="0.4";
+$ck_version="0.5";
 
 //一般设定
 function ck_generalsetting()
@@ -286,7 +286,10 @@ function ck_getchinesekeys($post)
 	//保存中文分词到数据库
 	if ($post) 
 	{
-		ck_getPostMetaCkeys($post->ID);
+		if (is_numeric($post) and $post>0) 
+		{
+			ck_getPostMetaCkeys($post);
+		}
 	}
 	
 	global $wpdb;
@@ -328,6 +331,7 @@ function ck_getckeys($pid)
 		$data["body"]	=$apost->post_content;
 		$data["n"]		=get_option("ck_n");
 		$data["permlink"]=get_permalink($pid);
+		$data["post_status"]=$apost->post_status;
 		$data["tags"]	=implode("#|#",array_unique(ck_getSysTags()));
 		$data["cats"]	=implode("#|#",array_unique(ck_getCats()));
 		$data["metas"]	=implode("#|#",array_unique(ck_getMetas()));
