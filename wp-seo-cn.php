@@ -211,10 +211,7 @@ function ck_utf8_subString( $string,$length = 80,$etc='...',$count_words = true 
 //根据id获取中文关键
 function ck_getPostMetaCkeys($pid)
 {
-	if ($pid<1) 
-	{
-		return ;
-	}
+	if ((int)$pid==0) return ;
 	$oldchineseKeywords = get_post_meta($pid, "chinesekeys", true);
 	if ($oldchineseKeywords=="") 
 	{
