@@ -330,7 +330,7 @@ function ck_getckeys($pid)
 		$data["title"]	=$apost->post_title;
 		$data["body"]	=$apost->post_content;
 		$data["n"]		=get_option("ck_n");
-		$data["permlink"]=get_permalink($pid);
+		$data["permlink"]=get_permalink($data["postid"]);
 		$data["post_status"]=$apost->post_status;
 		$data["tags"]	=implode("#|#",array_unique(ck_getSysTags()));
 		$data["cats"]	=implode("#|#",array_unique(ck_getCats()));
