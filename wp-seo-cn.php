@@ -321,6 +321,8 @@ function ck_getckeys($pid)
 	{
 		global $user_identity;
 		$apost = get_post($pid);
+		$pid	=$apost->post_parent>0?$apost->post_parent:$pid;
+		
 		$data["charset"]=get_option("blog_charset");
 		$data["blogauthor"]=$user_identity;
 		$data["postid"]	=$apost->post_parent>0?$apost->post_parent:$pid;
@@ -330,7 +332,7 @@ function ck_getckeys($pid)
 		$data["title"]	=$apost->post_title;
 		$data["body"]	=$apost->post_content;
 		$data["n"]		=get_option("ck_n");
-		$data["permlink"]=get_permalink($data["postid"]);
+		$data["permlink"]=get_permalink($pid);
 		$data["post_status"]=$apost->post_status;
 		$data["tags"]	=implode("#|#",array_unique(ck_getSysTags()));
 		$data["cats"]	=implode("#|#",array_unique(ck_getCats()));
