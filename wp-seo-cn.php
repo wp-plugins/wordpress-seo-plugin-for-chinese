@@ -217,7 +217,7 @@ function ck_getPostMetaCkeys($pid)
 	if ((int)$ck_version<0.7) 
 	{
 		global  $wpdb;
-		$wpdb->get_results("DELETE FROM `wp_postmeta` WHERE `wp_postmeta`.`post_id` =0;");
+		$wpdb->get_results("DELETE FROM `wp_postmeta` WHERE `wp_postmeta`.`post_id` =0 AND `wp_postmeta`.`meta_key` ='chinesekeys';");
 	}
 
 	$oldchineseKeywords = get_post_meta($pid, "chinesekeys", true);
