@@ -4,7 +4,7 @@ Plugin Name: WordPress中文SEO插件
 Plugin URI:  http://fairyfish.net/2008/06/27/wordpress-seo-plugin-for-chine/
 Description: 根据博客内容获得中文关键词并提供中文关键词建议，进行博客SEO!
 Author: askie
-Version: 0.7
+Version: 0.8
 Author URI: http://www.pkphp.com/
 
 Copyright (c) 2007
@@ -29,7 +29,7 @@ http://www.gnu.org/licenses/gpl.txt
 	INSTALL: 
 	Just install the plugin in your blog and activate
 */
-$ck_version="0.7";
+$ck_version="0.8";
 
 //一般设定
 function ck_generalsetting()
@@ -273,16 +273,17 @@ function ck_getRelatedPost()
 			$y[$b->ID]=$b;
 		}
 	}
+	is_array($x)?$x:array($x);
 	arsort($x);
-	foreach ($x as $k=>$v) 
+	foreach ((array)$x as $k=>$v) 
 	{
 		$x[$k]=$y[$k];
 	}
 	//截取需要显示的数量
 	$n=(int)get_option('ck_relatedpostsn');
 	$n=$n<1?10:$n;
-	$z=array_slice($x,0,$n);
-	foreach ($z as $p) 
+	$z=array_slice((array)$x,0,$n);
+	foreach ((array)$z as $p) 
 	{
 		$ww[]='<li><a href="'.get_permalink($p->ID).'" title="'.wptexturize($p->post_title).'">'.wptexturize($p->post_title).'</a></li>';
 	}
@@ -323,6 +324,18 @@ function ck_getchinesekeys($post)
 		}
 	}
 }
+//处理一些字符串
+function ck_stripSomeKeys($str)
+{
+	$str=strip_tags($str);
+	$str=html_entity_decode($str);
+	preg_match_all("/\&\#[0-9]+/",$str,$y);
+	foreach ((array)$y as $k) 
+	{
+		$str=str_replace($k,"",$str);
+	}
+	return $str;
+}
 //获取关键词
 function ck_getckeys($pid)
 {
@@ -358,6 +371,86 @@ function ck_ajax_getLocalTags()
 	$localTags=array_unique(ck_getSysTags());
 	foreach ($localTags as $key) 
 	{
+		if($key<>"") $keystags[]="<span>".$key."</span>";
+	}
+	return @implode(" ",$keystags);
+}
+//获取英文关键词
+function ck_ajax_getEnglishkeys()
+{
+	status_header( 200 );
+	header("Content-Type: text/javascript; charset=" . get_bloginfo('charset'));
+	
+	// Get data
+	$content = stripslashes($_POST['content']) .' '. stripslashes($_POST['title']);
+	$content = trim(ck_stripSomeKeys($content));
+	if ( empty($content) ) 
+	{
+		exit();
+	}
+
+	// Yahoo ID : h4c6gyLV34Fs7nHCrHUew7XDAU8YeQ_PpZVrzgAGih2mU12F0cI.ezr6e7FMvskR7Vu.AA--
+	$yahoo_id = 'h4c6gyLV34Fs7nHCrHUew7XDAU8YeQ_PpZVrzgAGih2mU12F0cI.ezr6e7FMvskR7Vu.AA--';
+	$yahoo_api_host = 'search.yahooapis.com'; // Api URL
+	$yahoo_api_path = '/ContentAnalysisService/V1/termExtraction'; // Api URL
+	$tags = stripslashes($_POST['tags']);
+
+	// Build params
+	$param = 'appid='.$yahoo_id; // Yahoo ID
+	$param .= '&context='.urlencode($content); // Post content
+	if ( !empty($tags) ) {
+		$param .= '&query='.urlencode($tags); // Existing tags
+	}
+	$param .= '&output=php'; // Get PHP Array !
+
+	$data = '';
+	
+	// Only use fsockopen !
+	if ( function_exists('curl_init') && 1 == 0 ) { // Curl exist ?
+		$curl = curl_init();
+
+		curl_setopt($curl, CURLOPT_URL, 'http://'.$yahoo_api_host.$yahoo_api_path.'?'.$param);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($curl, CURLOPT_POST, true);
+
+		$data = curl_exec($curl);
+		curl_close($curl);
+
+		$data = unserialize($data);
+	} else { // Fsocket
+		$request = 'appid='.$yahoo_id.$param;
+
+		$http_request  = "POST $yahoo_api_path HTTP/1.0\r\n";
+		$http_request .= "Host: $yahoo_api_host\r\n";
+		$http_request .= "Content-Type: application/x-www-form-urlencoded; charset=" . get_option('blog_charset') . "\r\n";
+		$http_request .= "Content-Length: " . strlen($request) . "\r\n";
+		$http_request .= "\r\n";
+		$http_request .= $request;
+
+		if( false != ( $fs = @fsockopen( $yahoo_api_host, 80, $errno, $errstr, 3) ) && is_resource($fs) ) {
+			fwrite($fs, $http_request);
+
+			while ( !feof($fs) )
+				$data .= fgets($fs, 1160); // One TCP-IP packet
+			fclose($fs);
+			$data = explode("\r\n\r\n", $data, 2);
+		}
+
+		$data = unserialize($data[1]);
+	}
+
+	$data = (array) $data['ResultSet']['Result'];
+	
+	// Remove empty terms
+	$data = array_unique($data);
+
+	foreach ($data as $key) 
+	{
+		$key=trim($key);
+		if ($key=="") 
+		{
+			continue;
+		}
 		if($key<>"") $keystags[]="<span>".$key."</span>";
 	}
 	return @implode(" ",$keystags);
@@ -956,6 +1049,10 @@ function ck_ajaxCheck()
 	{
 		ck_ajaxListTags(ck_ajax_getLocalTags());
 	}
+	if ( $_GET['ck_ajax_action'] == 'getenglishkeys' ) 
+	{
+		ck_ajaxListTags(ck_ajax_getEnglishkeys());
+	}
 }
 //保存tags
 function ck_saveTags( $post_id = null, $post_data = null ) 
@@ -1056,7 +1153,7 @@ function ck_remplaceTagsHelper()
 		}
 	}
 	jQuery(document).ready(function() {
-		jQuery("#tagsdiv").after('<div id="cktagsdiv" class="postbox if-js-closed"><h3><img id="local_loading" style="float:right;display:none;" src="../wp-content/plugins/wp-seo-cn/loader.gif"><div id="getlocaltags" style="color:blue;float:right;" class="ck_menu">本地tags</div><div style="color:blue;float:right;" class="ck_menu">&nbsp;|&nbsp;</div><div id="getck" style="color:red;float:right;" class="ck_menu">pkphp关键词建议</div><img id="ck_loading" style="float:right;display:none;" src="../wp-content/plugins/wp-seo-cn/loader.gif">关键词建议：(多个关键词使用英文逗号隔开)</h3><div class="inside"><input type="text" name="cktags-input" id="cktags-input" size="40" tabindex="3" style="width:98%;" value="" /><div id="cksuggestlist"></div><div id="localtagslist"></div></div></div>');
+		jQuery("#tagsdiv").after('<div id="cktagsdiv" class="postbox if-js-closed"><h3><img id="english_loading" style="float:right;display:none;" src="../wp-content/plugins/wp-seo-cn/loader.gif"><div id="getenglishkeys" style="color:green;float:right;" class="ck_menu">EnglishKeys</div><div style="color:blue;float:right;" class="ck_menu">&nbsp;|&nbsp;</div><img id="local_loading" style="float:right;display:none;" src="../wp-content/plugins/wp-seo-cn/loader.gif"><div id="getlocaltags" style="color:blue;float:right;" class="ck_menu">本地tags</div><div style="color:blue;float:right;" class="ck_menu">&nbsp;|&nbsp;</div><div id="getck" style="color:red;float:right;" class="ck_menu">pkphp关键词建议</div><img id="ck_loading" style="float:right;display:none;" src="../wp-content/plugins/wp-seo-cn/loader.gif">关键词建议：(多个关键词使用英文逗号隔开)</h3><div class="inside"><input type="text" name="cktags-input" id="cktags-input" size="40" tabindex="3" style="width:98%;" value="" /><div id="cksuggestlist"></div><div id="localtagslist"></div><div id="englishtagslist"></div></div></div>');
 		jQuery("#tagsdiv").hide();
 		jQuery("#cktags-input").attr("value",jQuery("#tags-input").val());
 		
@@ -1091,6 +1188,22 @@ function ck_remplaceTagsHelper()
 		jQuery("#getlocaltags").mouseout(function() {
 			jQuery("#getlocaltags").css("background","");
 		});
+		
+		jQuery("#getenglishkeys").click(function() {
+			jQuery("#english_loading").show("fast");
+			jQuery("#englishtagslist")
+			.fadeIn('slow')
+			.load( '<?php echo get_option('siteurl'); ?>/wp-admin/admin.php?ck_ajax_action=getenglishkeys', {content:ck_getContentFromEditor(),title:jQuery("#title").val(),tags:jQuery("#tags-input").val()}, function(){
+				jQuery("#englishtagslist span").click(function() { ck_addTag(this.innerHTML); return false;});
+				});
+			jQuery("#english_loading").hide("slow");	
+		});
+		jQuery("#getenglishkeys").mouseover(function() {
+			jQuery("#getenglishkeys").css("background","#CCCCCC");
+		});
+		jQuery("#getenglishkeys").mouseout(function() {
+			jQuery("#getenglishkeys").css("background","");
+		});
 	});
 /* ]]> */
 </script>
@@ -1099,6 +1212,7 @@ function ck_remplaceTagsHelper()
 /* Ajax Click Tags */
 #cksuggestlist { padding:6px; border:2px dashed #FF0000; margin:3px 0 0; display:none;max-height:300px;overflow:auto; }
 #localtagslist { padding:6px; border:2px dashed #0000FF; margin:3px 0 0; display:none;max-height:300px;overflow:auto; }
+#englishtagslist { padding:6px; border:2px dashed #00FF00; margin:3px 0 0; display:none;max-height:300px;overflow:auto; }
 /* Click Tags */
 #cksuggestlist span{font-size: 12px;}
 #cksuggestlist span{display:block;float:left;background:#f0f0ee;border:solid 1px;color:#333;cursor:pointer;border-color:#ccc #999 #999 #ccc;margin:3px;padding-left:4px;padding-top: 3px;padding-right: 4px;padding-bottom: 3px;}
@@ -1111,6 +1225,12 @@ function ck_remplaceTagsHelper()
 #localtagslist span:hover{color:#000;background:#b6bdd2;border-color:#0a246a;}
 #localtagslist span.local{background:#f0f0ee;}
 #localtagslist span.local:hover{background:#b6bdd2;}
+
+#englishtagslist span{font-size: 12px;}
+#englishtagslist span{display:block;float:left;background:#f0f0ee;border:solid 1px;color:#333;cursor:pointer;border-color:#ccc #999 #999 #ccc;margin:3px;padding-left:4px;padding-top: 3px;padding-right: 4px;padding-bottom: 3px;}
+#englishtagslist span:hover{color:#000;background:#b6bdd2;border-color:#0a246a;}
+#englishtagslist span.local{background:#f0f0ee;}
+#englishtagslist span.local:hover{background:#b6bdd2;}
 
 .ck_menu{padding-top: 2px;padding-right: 1px;padding-bottom: 2px;padding-left: 1px;}
 </style>	   
