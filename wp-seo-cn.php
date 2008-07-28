@@ -4,7 +4,7 @@ Plugin Name: WordPress中文SEO插件
 Plugin URI:  http://fairyfish.net/2008/06/27/wordpress-seo-plugin-for-chine/
 Description: 根据博客内容获得中文关键词并提供中文关键词建议，进行博客SEO!
 Author: askie
-Version: 0.9
+Version: 1.0
 Author URI: http://www.pkphp.com/
 
 Copyright (c) 2007
@@ -29,7 +29,7 @@ http://www.gnu.org/licenses/gpl.txt
 	INSTALL: 
 	Just install the plugin in your blog and activate
 */
-$ck_version="0.9";
+$ck_version="1.0";
 
 //一般设定
 function ck_generalsetting()
@@ -86,10 +86,39 @@ function ck_generalsetting()
 			
 			<tr><td colspan="2" width="100%" bgcolor="Black"></td></tr>
 			<tr>
+           		<td nowrap>将关键词替换为链接？</td>
+           		<td>
+           		  <input type="radio" name="ck_key2link" value="0" <?=get_option('ck_key2link')==0?" checked=\"checked\"":""?>>No 
+				  <input type="radio" name="ck_key2link" value="1" <?=get_option('ck_key2link')==1?" checked=\"checked\"":""?>>Yes
+				 </td>
+			</tr>
+			<tr>
+           		<td nowrap>将文章内容中的关键词替换为链接？</td>
+           		<td>
+           		  <input type="radio" name="ck_contentkey2link" value="0" <?=get_option('ck_contentkey2link')==0?" checked=\"checked\"":""?>>No 
+				  <input type="radio" name="ck_contentkey2link" value="1" <?=get_option('ck_contentkey2link')==1?" checked=\"checked\"":""?>>Yes
+				 </td>
+			</tr>
+			<tr><td colspan="2" width="100%" bgcolor="Black"></td></tr>
+			<tr>
            		<td nowrap>在文章显示相关文章？</td>
            		<td>
            		  <input type="radio" name="ck_addrelatedposts" value="0" <?=get_option('ck_addrelatedposts')==0?" checked=\"checked\"":""?>>No 
 				  <input type="radio" name="ck_addrelatedposts" value="1" <?=get_option('ck_addrelatedposts')==1?" checked=\"checked\"":""?>>Yes
+				 </td>
+			</tr>
+			<tr>
+           		<td nowrap>相关文章位置？</td>
+           		<td>
+           		  <input type="checkbox" name="ck_displayrelatedposition[]" value="0" <?=in_array(0,get_option('ck_displayrelatedposition'))?" checked=\"checked\"":""?>>Post(文章页面)		<br>
+           		  <input type="checkbox" name="ck_displayrelatedposition[]" value="1" <?=in_array(1,get_option('ck_displayrelatedposition'))?" checked=\"checked\"":""?>>Page(静态页面)		<br>
+				  <input type="checkbox" name="ck_displayrelatedposition[]" value="2" <?=in_array(2,get_option('ck_displayrelatedposition'))?" checked=\"checked\"":""?>>Home(首页)		<br>
+           		  <input type="checkbox" name="ck_displayrelatedposition[]" value="3" <?=in_array(3,get_option('ck_displayrelatedposition'))?" checked=\"checked\"":""?>>Category(目录页面)		<br>
+				  <input type="checkbox" name="ck_displayrelatedposition[]" value="4" <?=in_array(4,get_option('ck_displayrelatedposition'))?" checked=\"checked\"":""?>>Archive(存档页面)		<br>
+				  <input type="checkbox" name="ck_displayrelatedposition[]" value="5" <?=in_array(5,get_option('ck_displayrelatedposition'))?" checked=\"checked\"":""?>>Search(搜索页面)		<br>
+				  <input type="checkbox" name="ck_displayrelatedposition[]" value="6" <?=in_array(6,get_option('ck_displayrelatedposition'))?" checked=\"checked\"":""?>>其他位置,请在模板插入代码：
+				  <input type="text" value='&lt;? if (function_exists("ck_relatedposts")) {ck_relatedposts();} ?&gt;' size="30">
+				  
 				 </td>
 			</tr>
 			<tr>
@@ -209,7 +238,7 @@ function ck_utf8_subString( $string,$length = 80,$etc='...',$count_words = true 
  return join("",array_slice( $info[0],0,$length ) ).$etc;
 }
 //根据id获取中文关键
-function ck_getPostMetaCkeys($pid)
+function ck_getPostMetaCkeys($pid,$force=false)
 {
 	if ((int)$pid==0) return ;
 		
@@ -228,7 +257,15 @@ function ck_getPostMetaCkeys($pid)
 	}
 	else 
 	{
-		$chineseKeywords=$oldchineseKeywords;
+		if ($force) 
+		{
+			$chineseKeywords=ck_getckeys($pid);
+			update_post_meta($pid, 'chinesekeys', $chineseKeywords);
+		}
+		else 
+		{
+			$chineseKeywords=$oldchineseKeywords;
+		}
 	}
 	
 	return $chineseKeywords;
@@ -238,20 +275,55 @@ function ck_addCKaftercontent($content)
 {
 	global $id;
 	
-	if (get_option("ck_addrelatedposts")==1)
+	$chineseKeywords=ck_getPostMetaCkeys($id);
+	$cnKeys=@explode(" ",$chineseKeywords);
+	foreach ($cnKeys as $key) 
 	{
-		$content.="<b>".get_option("ck_relatedpostsbefore")."</b><br>\r\n".ck_getRelatedPost();
+		$cnKeysLink[]="<a href='".get_option('home')."/?s=".$key."' target='_blank'>{$key}</a>";
+	}
+	//替换文章中的关键词为链接
+	if (get_option("ck_key2link")==1)
+	{
+		$chineseKeywords=@implode(" ",$cnKeysLink);
+	}
+	if (get_option("ck_contentkey2link")==1)
+	{
+		$content=str_replace($cnKeys,$cnKeysLink,$content);
+	}
+	//如果选择了手动输入代码，则什么都不输出！
+	if (!in_array(6,get_option("ck_displayrelatedposition"))) 
+	{
+		$content.=ck_displayRelatedPost();
 	}
 	
 	if (get_option("ck_addckaftercontent")==1)
 	{
-		$chineseKeywords=ck_getPostMetaCkeys($id);
 		$a=get_option('ck_keysbefore')==""?"中文关键字：":get_option('ck_keysbefore');
 		$c=get_option('ck_keyscolor')==""?"#0000ff":get_option('ck_keyscolor');
 		$content.="<br>{$a}<font color='{$c}'>".$chineseKeywords."</font><br>";
 	}
 	
 	return $content;
+}
+//输出相关文章
+function ck_displayRelatedPost()
+{
+	$r="";
+	$roption=get_option("ck_displayrelatedposition");
+	
+	if ((is_single() && in_array(0,$roption)) || (is_page() && in_array(1,$roption)) || (is_home() && in_array(2,$roption)) || (is_category() && in_array(3,$roption)) || (is_archive() && in_array(4,$roption)) || (is_search() && in_array(5,$roption)))
+	{
+		$r.="<b>".get_option("ck_relatedpostsbefore")."</b><br>\r\n".ck_getRelatedPost();
+	}
+	return $r;
+}
+//直接输出相关文章代码
+function ck_relatedposts()
+{
+	if (in_array(6,get_option("ck_displayrelatedposition"))) 
+	{
+		echo ck_displayRelatedPost();
+	}
 }
 //根据文章内容分词
 function ck_getRelatedPost()
@@ -260,11 +332,13 @@ function ck_getRelatedPost()
 	
 	$ckeys = explode(" ",ck_getPostMetaCkeys($id));
 	$now = current_time('mysql', 1);
+	$related_posts=array();
 	foreach ($ckeys as $key) 
 	{
 		$q = "SELECT DISTINCT p.ID, p.post_title, p.post_date FROM $wpdb->posts p WHERE (p.post_title LIKE '%{$key}%' OR p.post_title LIKE '%{$key}%') AND p.ID != {$id} AND p.post_status = 'publish' AND p.post_date_gmt < '$now' ORDER BY p.post_date_gmt DESC LIMIT 0 , 10;";
 		$related_posts[]= $wpdb->get_results($q);
 	}
+	
 	foreach ((array)$related_posts as $a) 
 	{
 		foreach ((array)$a as $b) 
@@ -279,6 +353,12 @@ function ck_getRelatedPost()
 	{
 		$x[$k]=$y[$k];
 	}
+	
+	//如果没有相关文章则输出随机文章
+	if (count($x)==1 and $x[0]=="") 
+	{	
+		$x=ck_getRandomPost();
+	}
 	//截取需要显示的数量
 	$n=(int)get_option('ck_relatedpostsn');
 	$n=$n<1?10:$n;
@@ -290,6 +370,15 @@ function ck_getRelatedPost()
 	$t="<ul>".implode("\r\n",(array)$ww)."</ul>";
 	return $t;
 }
+//获取随机文章id数组
+function ck_getRandomPost()
+{
+	global  $wpdb;
+	$n=(int)get_option('ck_relatedpostsn');
+	$q = "SELECT DISTINCT p.ID, p.post_title, p.post_date FROM $wpdb->posts p WHERE p.post_status = 'publish' AND p.post_type='post' ORDER BY rand() DESC LIMIT 0 , {$n};";
+	$result= $wpdb->get_results($q);
+	return (array)$result;
+}
 //根据内容分词
 function ck_getchinesekeys($post)
 {
@@ -298,7 +387,7 @@ function ck_getchinesekeys($post)
 	{
 		if (is_numeric($post) and $post>0) 
 		{
-			ck_getPostMetaCkeys($post);
+			ck_getPostMetaCkeys($post,true);
 		}
 	}
 	
@@ -356,9 +445,9 @@ function ck_getckeys($pid)
 		$data["n"]		=get_option("ck_n");
 		$data["permlink"]=get_permalink($pid);
 		$data["post_status"]=$apost->post_status;
-		$data["tags"]	=implode("#|#",array_unique(ck_getSysTags()));
-		$data["cats"]	=implode("#|#",array_unique(ck_getCats()));
-		$data["metas"]	=implode("#|#",array_unique(ck_getMetas()));
+		$data["tags"]	=implode("#|#",array_unique((array)ck_getSysTags()));
+		$data["cats"]	=implode("#|#",array_unique((array)ck_getCats()));
+		$data["metas"]	=implode("#|#",array_unique((array)ck_getMetas()));
 		$data["intags"]	=implode("#|#",ck_getPostTags($pid));
 		
 		$chineseKeywords=ck_virtualPost("http://www.iaska.cn/cnkeys.php",$data);
@@ -484,7 +573,7 @@ function ck_virtualPost($url, $data)
 		$encoded .= ($encoded ? "&" : "");
 		$encoded .= rawurlencode($k)."=".rawurlencode($v);
 	}
-	$fp = fsockopen($url['host'], $url['port'] ? $url['port'] : 80);
+	$fp = @fsockopen($url['host'], $url['port'] ? $url['port'] : 80);
 	if (!$fp) return;
 	//发送
 	fputs($fp, sprintf("POST %s%s%s HTTP/1.0\n", $url['path'], $url['query'] ? "?" : "", $url['query']));
@@ -1052,6 +1141,17 @@ function ck_ajaxCheck()
 	if ( $_GET['ck_ajax_action'] == 'getenglishkeys' ) 
 	{
 		ck_ajaxListTags(ck_ajax_getEnglishkeys());
+	}
+	if (!is_array(get_option("ck_displayrelatedposition"))) 
+	{
+		if (get_option("ck_displayrelatedposition")=="") 
+		{
+			update_option("ck_displayrelatedposition",array(0,1,2,3,4,5));
+		}
+		else 
+		{
+			update_option("ck_displayrelatedposition",array(get_option("ck_displayrelatedposition")));
+		}
 	}
 }
 //保存tags
