@@ -4,7 +4,7 @@ Plugin Name: WordPress中文SEO插件
 Plugin URI:  http://fairyfish.net/2008/06/27/wordpress-seo-plugin-for-chine/
 Description: 根据博客内容获得中文关键词并提供中文关键词建议，进行博客SEO!
 Author: askie
-Version: 1.0
+Version: 1.1
 Author URI: http://www.pkphp.com/
 
 Copyright (c) 2007
@@ -29,12 +29,17 @@ http://www.gnu.org/licenses/gpl.txt
 	INSTALL: 
 	Just install the plugin in your blog and activate
 */
-$ck_version="1.0";
+$ck_version="1.1";
 
 //一般设定
 function ck_generalsetting()
 {
 	global $im_FontPath;
+	
+	if (date("Y-m-d")<>get_option("ck_vesionsupdatetime")) 
+	{
+		ck_versionCheck();
+	}
 	if ($_POST['flag']=="general") 
      {
 		foreach ($_POST as $key=>$value) 
@@ -173,7 +178,7 @@ function ck_sidebar()
 	?>
 	<b>关于</b><br>
 	<p align="left">
-	<img src="<?=ck_getpluginUrl()?>/i.png"> <a href="http://fairyfish.net/2008/06/27/wordpress-seo-plugin-for-chine/" target="_blank">WordPress中文SEO插件</a><br>
+	<?=ck_showversionstring()?>
 	<img src="<?=ck_getpluginUrl()?>/i.png"> Askie's home page <a href="http://www.pkphp.com/" target="_blank">PKPHP.com</a>!
 	</p>
 	<hr>
@@ -382,6 +387,8 @@ function ck_getRandomPost()
 //根据内容分词
 function ck_getchinesekeys($post)
 {
+	global $post_ID;
+	$post=$post_ID;
 	//保存中文分词到数据库
 	if ($post) 
 	{
@@ -822,7 +829,25 @@ function ck_getTags( $args = '', $skip_cache = false, $taxonomy = 'post_tag' )
 	$terms = apply_filters('get_tags', $terms, $args);
 	return $terms;
 }
-
+//检查版本
+function ck_versionCheck()
+{
+	$v=file_get_contents("http://www.pkphp.com/versioncheck.php");
+	if ($v<>"") 
+	{
+		update_option("ab_vesionstring", $v);
+		update_option("ab_vesionsupdatetime", date("Y-m-d"));
+	}
+}
+//显示当前发布版本信息
+function ck_showversionstring()
+{
+	$v=get_option("ab_vesionstring");
+	if ($v<>"") 
+	{ 
+		return '<div style="border: 1px dotted #FF6600; background-color: #FFEFDF; padding: 2px; margin-bottom: 5px; margin-top: -5px;">'.$v.'</div>';	
+	}
+}
 /**
  * Extended get_terms function support
  *  - Limit category
