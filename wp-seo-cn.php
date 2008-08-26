@@ -407,7 +407,7 @@ function ck_getchinesekeys($post)
 			$postid=$post;
 			$post=array(get_post($post));
 		}
-		foreach ($post as $key=>$var) 
+		foreach ((array)$post as $key=>$var) 
 		{
 			if ($post[$key]->post_excerpt == "") 
 			{
