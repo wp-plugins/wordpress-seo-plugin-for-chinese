@@ -390,23 +390,17 @@ function ck_getchinesekeys($post)
 	global $post_ID;
 	$post=$post_ID;
 	//保存中文分词到数据库
-	if ($post) 
+	if (is_numeric($post) and $post>0) 
 	{
-		if (is_numeric($post) and $post>0) 
-		{
-			ck_getPostMetaCkeys($post,true);
-		}
+		ck_getPostMetaCkeys($post,true);
 	}
 	
 	global $wpdb;
 	//自动填充摘要
 	if (get_option("ck_autoexcerpt")==1) 
 	{
-		if (is_numeric($post)) 
-		{
-			$postid=$post;
-			$post=array(get_post($post));
-		}
+		$postid=$post;
+		$post=array(get_post($post));
 		foreach ((array)$post as $key=>$var) 
 		{
 			if ($post[$key]->post_excerpt == "") 
@@ -415,8 +409,7 @@ function ck_getchinesekeys($post)
 			    $ccontent=strip_tags($post[$key]->post_content);
 				$post[$key]->post_excerpt = strtolower(get_option("blog_charset"))=="utf-8"?ck_utf8_subString($ccontent,$n):substr($ccontent,0,$n);
 				$wpdb->query("UPDATE `{$wpdb->posts}` SET `post_excerpt` = '{$post[$key]->post_excerpt}' WHERE `ID` = '{$post[$key]->ID}'");
-			}  
-			
+			}
 		}
 	}
 }
