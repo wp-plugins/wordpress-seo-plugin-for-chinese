@@ -305,7 +305,7 @@ function ck_addCKaftercontent($content)
 	{
 		$a=get_option('ck_keysbefore')==""?"中文关键字：":get_option('ck_keysbefore');
 		$c=get_option('ck_keyscolor')==""?"#0000ff":get_option('ck_keyscolor');
-		$content.="<br>{$a}<font color='{$c}'>".$chineseKeywords."</font><br>";
+		$content.="<br />{$a}<font color='{$c}'>".$chineseKeywords."</font><br />";
 	}
 	
 	return $content;
