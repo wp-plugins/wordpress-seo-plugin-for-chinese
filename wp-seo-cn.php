@@ -318,7 +318,7 @@ function ck_displayRelatedPost()
 	
 	if ((is_single() && in_array(0,$roption)) || (is_page() && in_array(1,$roption)) || (is_home() && in_array(2,$roption)) || (is_category() && in_array(3,$roption)) || (is_archive() && in_array(4,$roption)) || (is_search() && in_array(5,$roption)))
 	{
-		$r.="<b>".get_option("ck_relatedpostsbefore")."</b><br>\r\n".ck_getRelatedPost();
+		$r.="<b>".get_option("ck_relatedpostsbefore")."</b><br />\r\n".ck_getRelatedPost();
 	}
 	return $r;
 }
