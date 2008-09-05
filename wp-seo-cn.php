@@ -829,14 +829,14 @@ function ck_versionCheck()
 	$v=file_get_contents("http://www.pkphp.com/versioncheck.php");
 	if ($v<>"") 
 	{
-		update_option("ab_vesionstring", $v);
-		update_option("ab_vesionsupdatetime", date("Y-m-d"));
+		update_option("ck_vesionstring", $v);
+		update_option("ck_vesionsupdatetime", date("Y-m-d"));
 	}
 }
 //显示当前发布版本信息
 function ck_showversionstring()
 {
-	$v=get_option("ab_vesionstring");
+	$v=get_option("ck_vesionstring");
 	if ($v<>"") 
 	{ 
 		return '<div style="border: 1px dotted #FF6600; background-color: #FFEFDF; padding: 2px; margin-bottom: 5px; margin-top: -5px;">'.$v.'</div>';	
