@@ -258,7 +258,7 @@ function ck_getPostMetaCkeys($pid,$force=false)
 	if ($oldchineseKeywords=="") 
 	{
 		$chineseKeywords=ck_getckeys($pid);
-		add_post_meta($pid, 'chinesekeys', $chineseKeywords);
+		add_post_meta($pid, 'chinesekeys', $chineseKeywords,true);
 	}
 	else 
 	{
@@ -385,9 +385,8 @@ function ck_getRandomPost()
 	return (array)$result;
 }
 //根据内容分词
-function ck_getchinesekeys($post)
+function ck_getchinesekeys($post_ID)
 {
-	global $post_ID;
 	$post=$post_ID;
 	//保存中文分词到数据库
 	if (is_numeric($post) and $post>0) 
