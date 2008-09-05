@@ -1387,9 +1387,9 @@ add_action('admin_menu', 'ck_admin_menu');
 register_deactivation_hook(__FILE__,'ck_deactivation');
 function ck_deactivation()
 {
-	global $wpdb;
-	$remove_options_sql = "DELETE FROM $wpdb->options WHERE $wpdb->options.option_name like 'ck_%'";
-	$wpdb->query($remove_options_sql);
+//	global $wpdb;
+//	$remove_options_sql = "DELETE FROM $wpdb->options WHERE $wpdb->options.option_name like 'ck_%'";
+//	$wpdb->query($remove_options_sql);
 	delete_post_meta_by_key("chinesekeys");
 }
 ?>
