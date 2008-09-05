@@ -29,7 +29,7 @@ http://www.gnu.org/licenses/gpl.txt
 	INSTALL: 
 	Just install the plugin in your blog and activate
 */
-$ck_version="1.1";
+$ck_version="1.2";
 
 //一般设定
 function ck_generalsetting()
