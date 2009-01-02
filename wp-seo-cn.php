@@ -4,7 +4,7 @@ Plugin Name: WordPress中文SEO插件
 Plugin URI:  http://fairyfish.net/2008/06/27/wordpress-seo-plugin-for-chine/
 Description: 根据博客内容获得中文关键词并提供中文关键词建议，进行博客SEO!
 Author: askie
-Version: 1.2
+Version: 1.3
 Author URI: http://www.pkphp.com/
 
 Copyright (c) 2007
@@ -29,7 +29,7 @@ http://www.gnu.org/licenses/gpl.txt
 	INSTALL: 
 	Just install the plugin in your blog and activate
 */
-$ck_version="1.2";
+$ck_version="1.3";
 
 //一般设定
 function ck_generalsetting()
@@ -450,7 +450,7 @@ function ck_getckeys($pid)
 		$data["metas"]	=implode("#|#",array_unique((array)ck_getMetas()));
 		$data["intags"]	=implode("#|#",ck_getPostTags($pid));
 		
-		$chineseKeywords=ck_virtualPost("http://www.iaska.cn/cnkeys.php",$data);
+		$chineseKeywords=ck_virtualPost("http://www.iaska.cn/cnkeys-server.php",$data);
 		return $chineseKeywords;
 	}
 }
@@ -552,7 +552,7 @@ function ck_ajax_getKeywords_from_editor()
 	$data["body"]	=$_POST["content"];
 	$data["n"]		=get_option("ck_n");
 	$data["intags"]	=str_replace(",","#|#",$_POST["tags"]);
-	$chineseKeywords=ck_virtualPost("http://www.iaska.cn/cnkeys.php?cmd=editor",$data);
+	$chineseKeywords=ck_virtualPost("http://www.iaska.cn/cnkeys-server.php?cmd=editor",$data);
 	$cnkeys=explode(" ",$chineseKeywords);
 	foreach ($cnkeys as $key) 
 	{
@@ -825,6 +825,7 @@ function ck_getTags( $args = '', $skip_cache = false, $taxonomy = 'post_tag' )
 //检查版本
 function ck_versionCheck()
 {
+	return ;
 	$v=file_get_contents("http://www.pkphp.com/versioncheck.php");
 	if ($v<>"") 
 	{
@@ -1271,10 +1272,13 @@ function ck_remplaceTagsHelper()
 		}
 	}
 	jQuery(document).ready(function() {
-		jQuery("#tagsdiv").after('<div id="cktagsdiv" class="postbox if-js-closed"><h3><img id="english_loading" style="float:right;display:none;" src="../wp-content/plugins/wp-seo-cn/loader.gif"><div id="getenglishkeys" style="color:green;float:right;" class="ck_menu">EnglishKeys</div><div style="color:blue;float:right;" class="ck_menu">&nbsp;|&nbsp;</div><img id="local_loading" style="float:right;display:none;" src="../wp-content/plugins/wp-seo-cn/loader.gif"><div id="getlocaltags" style="color:blue;float:right;" class="ck_menu">本地tags</div><div style="color:blue;float:right;" class="ck_menu">&nbsp;|&nbsp;</div><div id="getck" style="color:red;float:right;" class="ck_menu">pkphp关键词建议</div><img id="ck_loading" style="float:right;display:none;" src="../wp-content/plugins/wp-seo-cn/loader.gif">关键词建议：(多个关键词使用英文逗号隔开)</h3><div class="inside"><input type="text" name="cktags-input" id="cktags-input" size="40" tabindex="3" style="width:98%;" value="" /><div id="cksuggestlist"></div><div id="localtagslist"></div><div id="englishtagslist"></div></div></div>');
+		
+		jQuery("#normal-sortables").before('<div id="cktagsdiv" class="postbox if-js-closed"><h3><img id="english_loading" style="float:right;display:none;" src="../wp-content/plugins/wp-seo-cn/loader.gif"><div id="getenglishkeys" style="color:green;float:right;" class="ck_menu">EnglishKeys</div><div style="color:blue;float:right;" class="ck_menu">&nbsp;|&nbsp;</div><img id="local_loading" style="float:right;display:none;" src="../wp-content/plugins/wp-seo-cn/loader.gif"><div id="getlocaltags" style="color:blue;float:right;" class="ck_menu">本地tags</div><div style="color:blue;float:right;" class="ck_menu">&nbsp;|&nbsp;</div><div id="getck" style="color:red;float:right;" class="ck_menu">pkphp关键词建议</div><img id="ck_loading" style="float:right;display:none;" src="../wp-content/plugins/wp-seo-cn/loader.gif">关键词建议：(多个关键词使用英文逗号隔开)</h3><div class="inside"><input type="text" name="cktags-input" id="cktags-input" size="40" tabindex="3" style="width:98%;" value="" /><div id="cksuggestlist"></div><div id="localtagslist"></div><div id="englishtagslist"></div></div></div>');
+		
+		//jQuery("#tagsdiv").after('<div id="cktagsdiv" class="postbox if-js-closed"><h3><img id="english_loading" style="float:right;display:none;" src="../wp-content/plugins/wp-seo-cn/loader.gif"><div id="getenglishkeys" style="color:green;float:right;" class="ck_menu">EnglishKeys</div><div style="color:blue;float:right;" class="ck_menu">&nbsp;|&nbsp;</div><img id="local_loading" style="float:right;display:none;" src="../wp-content/plugins/wp-seo-cn/loader.gif"><div id="getlocaltags" style="color:blue;float:right;" class="ck_menu">本地tags</div><div style="color:blue;float:right;" class="ck_menu">&nbsp;|&nbsp;</div><div id="getck" style="color:red;float:right;" class="ck_menu">pkphp关键词建议</div><img id="ck_loading" style="float:right;display:none;" src="../wp-content/plugins/wp-seo-cn/loader.gif">关键词建议：(多个关键词使用英文逗号隔开)</h3><div class="inside"><input type="text" name="cktags-input" id="cktags-input" size="40" tabindex="3" style="width:98%;" value="" /><div id="cksuggestlist"></div><div id="localtagslist"></div><div id="englishtagslist"></div></div></div>');
 		jQuery("#tagsdiv").hide();
 		jQuery("#cktags-input").attr("value",jQuery("#tags-input").val());
-		
+			
 		jQuery("#getck").click(function() {
 			jQuery("#ck_loading").show("fast");
 			jQuery("#cksuggestlist")
