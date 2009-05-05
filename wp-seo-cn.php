@@ -4,7 +4,7 @@ Plugin Name: WordPress中文SEO插件
 Plugin URI:  http://fairyfish.net/2008/06/27/wordpress-seo-plugin-for-chine/
 Description: 根据博客内容获得中文关键词并提供中文关键词建议，进行博客SEO!
 Author: askie
-Version: 1.3
+Version: 1.4
 Author URI: http://www.pkphp.com/
 
 Copyright (c) 2007
@@ -29,7 +29,7 @@ http://www.gnu.org/licenses/gpl.txt
 	INSTALL: 
 	Just install the plugin in your blog and activate
 */
-$ck_version="1.3";
+$ck_version="1.4";
 
 //一般设定
 function ck_generalsetting()
@@ -450,7 +450,7 @@ function ck_getckeys($pid)
 		$data["metas"]	=implode("#|#",array_unique((array)ck_getMetas()));
 		$data["intags"]	=implode("#|#",ck_getPostTags($pid));
 		
-		$chineseKeywords=ck_virtualPost("http://www.iaska.cn/cnkeys-server.php",$data);
+		$chineseKeywords=ck_virtualPost("http://api.iaska.cn/cnkeys-server.php",$data);
 		return $chineseKeywords;
 	}
 }
@@ -552,7 +552,7 @@ function ck_ajax_getKeywords_from_editor()
 	$data["body"]	=$_POST["content"];
 	$data["n"]		=get_option("ck_n");
 	$data["intags"]	=str_replace(",","#|#",$_POST["tags"]);
-	$chineseKeywords=ck_virtualPost("http://www.iaska.cn/cnkeys-server.php?cmd=editor",$data);
+	$chineseKeywords=ck_virtualPost("http://api.iaska.cn/cnkeys-server.php?cmd=editor",$data);
 	$cnkeys=explode(" ",$chineseKeywords);
 	foreach ($cnkeys as $key) 
 	{

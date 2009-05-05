@@ -3,7 +3,7 @@ Contributors: denishua,askie
 Tags: SEO, Chinese, Tag
 Requires at least: 2.5
 Tested up to: 2.7
-Stable tag: 1.3
+Stable tag: 1.4
 
 WordPress SEO Plugin for Chinese use Chinese Word Splitter to SEO Chinese SEO Blog. 
 
